@@ -952,6 +952,7 @@ async function doSetup() {
   const resp = await fetch(_BRAIN_PREFIX + '/auth/setup', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password: p1}) });
   if (resp.ok) {
     document.getElementById('auth-overlay').style.display = 'none';
+    loadBuckets();
   } else {
     const d = await resp.json();
     showAuthError(d.detail || '设置失败');
@@ -963,6 +964,7 @@ async function doLogin() {
   const resp = await fetch(_BRAIN_PREFIX + '/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password: pwd}) });
   if (resp.ok) {
     document.getElementById('auth-overlay').style.display = 'none';
+    loadBuckets();
   } else {
     const d = await resp.json();
     showAuthError(d.detail || '密码错误');
