@@ -101,7 +101,12 @@
     background: rgba(20, 10, 50, 0.7);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .tabs::-webkit-scrollbar { display: none; }
   .tab {
     padding: 14px 22px;
     font-size: 13px;
@@ -616,11 +621,12 @@
 
 <div class="tabs">
   <div class="tab active" data-tab="list">记忆桶</div>
-  <div class="tab" data-tab="breath">Breath 模拟</div>
-  <div class="tab" data-tab="network">记忆网络</div>
+  <div class="tab" data-tab="breath">Breath</div>
+  <div class="tab" data-tab="network">网络</div>
   <div class="tab" data-tab="config">配置</div>
   <div class="tab" data-tab="import">导入</div>
   <div class="tab" data-tab="settings">设置</div>
+  <div class="tab" data-tab="timeline">时间线</div>
 </div>
 
 <div class="content" id="list-view">
@@ -1091,10 +1097,12 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('config-view').style.display = target === 'config' ? '' : 'none';
     document.getElementById('import-view').style.display = target === 'import' ? '' : 'none';
     document.getElementById('settings-view').style.display = target === 'settings' ? '' : 'none';
+    document.getElementById('timeline-view').style.display = target === 'timeline' ? '' : 'none';
     if (target === 'network') loadNetwork();
     if (target === 'config') loadConfig();
     if (target === 'import') { pollImportStatus(); loadImportResults(); }
     if (target === 'settings') loadSettingsStatus();
+    if (target === 'timeline') loadTimeline();
   });
 });
 
