@@ -810,6 +810,10 @@
   </div>
 </div>
 
+<div class="content" id="timeline-view" style="display:none">
+  <div id="timeline-list"></div>
+</div>
+
 <div class="detail-panel" id="detail-panel">
   <button class="close-btn" onclick="closeDetail()">✕</button>
   <div id="detail-content"></div>
@@ -1072,7 +1076,7 @@ async function saveHostVault() {
 
 // authFetch: wraps fetch, shows auth overlay on 401
 async function authFetch(url, options) {
-  const resp = await fetch(url, options);
+  const resp = await fetch(_BRAIN_PREFIX + url, options);
   if (resp.status === 401) {
     doLogout();
     return null;
@@ -1266,9 +1270,9 @@ async function loadNetwork() {
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
   var W = canvas.offsetWidth, H = canvas.offsetHeight;
 
-  ctx.fillStyle = '#FDFCF0';
+  ctx.fillStyle = '#0d0b1a';
   ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#8A8070';
+  ctx.fillStyle = 'rgba(180,160,255,0.6)';
   ctx.font = '14px Inter, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('加载记忆网络…', W/2, H/2);
@@ -1340,7 +1344,7 @@ function drawNetwork(ctx, W, H, data) {
     });
   }
 
-  ctx.fillStyle = '#FDFCF0';
+  ctx.fillStyle = '#0d0b1a';
   ctx.fillRect(0, 0, W, H);
 
   edges.forEach(function(e) {
@@ -1349,12 +1353,12 @@ function drawNetwork(ctx, W, H, data) {
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
-    ctx.strokeStyle = 'rgba(47, 79, 79, ' + (e.similarity * 0.35) + ')';
+    ctx.strokeStyle = 'rgba(120, 80, 200, ' + (e.similarity * 0.45) + ')';
     ctx.lineWidth = Math.max(0.5, e.similarity * 2);
     ctx.stroke();
   });
 
-  var colors = { dynamic: '#2F4F4F', permanent: '#9A7B4F', feel: '#8B6A6A', archived: '#B0A590' };
+  var colors = { dynamic: '#7c5ce8', permanent: '#a07050', feel: '#e07090', archived: '#6060a0' };
   nodes.forEach(function(n) {
     var p = positions[n.id];
     var r = Math.max(4, Math.min(14, n.score * 0.8));
@@ -1377,7 +1381,7 @@ function drawNetwork(ctx, W, H, data) {
     }
 
     var name = n.name.length > 10 ? n.name.slice(0, 10) + '…' : n.name;
-    ctx.fillStyle = '#3A3530';
+    ctx.fillStyle = 'rgba(220,200,255,0.85)';
     ctx.font = '11px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(name, p.x, p.y + r + 14);
@@ -1634,6 +1638,41 @@ filterBuckets = function(buckets) {
   }
   return result;
 };
+
+// --- Timeline ---
+function loadTimeline() {
+  var container = document.getElementById('timeline-list');
+  if (!allBuckets.length) {
+    container.innerHTML = '<div class="loading">暂无记忆桶</div>';
+    return;
+  }
+  var byDate = {};
+  allBuckets.forEach(function(b) {
+    var d = b.created ? String(b.created).slice(0, 10) : '未知日期';
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(b);
+  });
+  var dates = Object.keys(byDate).sort().reverse();
+  var typeColors = { dynamic: '#7c5ce8', permanent: '#a07050', feel: '#e07090', archived: '#6060a0' };
+  container.innerHTML = dates.map(function(date) {
+    var items = byDate[date];
+    return '<div style="margin-bottom:28px;">' +
+      '<div style="font-size:11px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">📅 ' + date + ' &nbsp;<span style="opacity:0.55;">' + items.length + ' 条记忆</span></div>' +
+      items.map(function(b) {
+        var color = typeColors[b.type] || '#7c5ce8';
+        var icon = b.pinned ? '📌' : b.type === 'feel' ? '🫧' : b.digested ? '🌿' : b.resolved ? '💤' : '💭';
+        return '<div onclick="showDetail(\'' + b.id + '\')" style="display:flex;gap:12px;padding:10px 14px;margin-bottom:6px;border-radius:12px;background:var(--surface);border-left:3px solid ' + color + ';cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity=\'0.75\'" onmouseout="this.style.opacity=\'1\'">' +
+          '<span style="font-size:15px;line-height:1.6;">' + icon + '</span>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(b.name) + '</div>' +
+            '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc((b.content_preview || '').slice(0, 60)) + '</div>' +
+          '</div>' +
+          '<span style="font-size:11px;color:var(--text-light);white-space:nowrap;padding-top:2px;">' + b.score.toFixed(2) + '</span>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }).join('');
+}
 
 // --- Import functions ---
 const uploadZone = document.getElementById('import-upload-zone');
